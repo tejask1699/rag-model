@@ -92,7 +92,7 @@ export default function ChatUI() {
             key={i} 
             className={`flex gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
           >
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
               msg.role === "user" ? "bg-indigo-600" : "bg-zinc-800 border border-white/5"
             }`}>
               {msg.role === "user" ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-blue-400" />}
@@ -147,7 +147,7 @@ export default function ChatUI() {
         onSubmit={handleAsk}
         className="relative group"
       >
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-500"></div>
+        <div className="absolute -inset-0.5 bg-gradient-to from-blue-500 to-indigo-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-500"></div>
         <div className="relative flex items-center bg-zinc-900 border border-white/10 rounded-2xl p-2 pr-3 shadow-2xl">
           <input
             value={query}
@@ -170,4 +170,4 @@ export default function ChatUI() {
       </form>
     </div>
   );
-}
+}

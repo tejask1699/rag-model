@@ -1,15 +1,20 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const openai = new OpenAI({
-    apiKey: process.env.NEXT_PUBLIC_OPENAI_KEY,
-})
+if (!process.env.NEXT_GEMINI_API_KEY) {
+    console.error("NEXT_GEMINI_API_KEY is not defined in environment variables");
+}
 
+const genAI = new GoogleGenerativeAI(
+    process.env.NEXT_GEMINI_API_KEY || ""
+);
 
 export async function getEmbeddings(text: string) {
-    const res = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: text
-    })
+    const model = genAI.getGenerativeModel(
+        { model: "models/gemini-embedding-001" },
+        { apiVersion: "v1beta" }
+    );
 
-    return res.data[0].embedding
+    const result = await model.embedContent(text);
+
+    return result.embedding.values;
 }

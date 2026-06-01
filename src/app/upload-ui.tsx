@@ -1,7 +1,22 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, X } from "lucide-react";
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as Record<string, unknown>;
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return "Failed to upload file";
+}
 
 export default function UploadUI() {
   const [file, setFile] = useState<File | null>(null);
@@ -30,7 +45,7 @@ export default function UploadUI() {
         body: formData,
       });
 
-      const data = await res.json();
+      const data: { error?: string; extractedLength?: number } = await res.json();
 
       if (!res.ok) {
         throw new Error(data.error || "Upload failed");
@@ -41,9 +56,9 @@ export default function UploadUI() {
         message: `Successfully ingested: ${file.name} (${data.extractedLength} characters)` 
       });
       setFile(null);
-    } catch (err: any) {
-      console.error("Upload error:", err);
-      setStatus({ type: "error", message: err.message || "Failed to upload file" });
+    } catch (error: unknown) {
+      console.error("Upload error:", error);
+      setStatus({ type: "error", message: getErrorMessage(error) });
     } finally {
       setIsUploading(false);
     }

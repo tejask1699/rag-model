@@ -1,11 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-if (!process.env.NEXT_GEMINI_API_KEY) {
-    console.error("NEXT_GEMINI_API_KEY is not defined in environment variables");
+const apiKey = process.env.GEMINI_API_KEY ?? process.env.NEXT_GEMINI_API_KEY;
+
+if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not defined in environment variables");
 }
 
 const genAI = new GoogleGenerativeAI(
-    process.env.NEXT_GEMINI_API_KEY || ""
+    apiKey
 );
 
 export async function getEmbeddings(text: string) {

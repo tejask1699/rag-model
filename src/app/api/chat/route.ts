@@ -1,6 +1,32 @@
 import { retrieveDocuments } from "@/lib/retrieval";
 import { generateAnswer } from "@/lib/llm";
 
+function getErrorResponse(error: unknown) {
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as {
+      status?: number;
+      code?: string;
+      error?: { message?: string };
+      message?: string;
+    };
+
+    return {
+      status: typeof maybeError.status === "number" ? maybeError.status : 500,
+      message:
+        maybeError.error?.message ||
+        maybeError.message ||
+        "An unexpected error occurred",
+      code: maybeError.code || "internal_error",
+    };
+  }
+
+  return {
+    status: 500,
+    message: "An unexpected error occurred",
+    code: "internal_error",
+  };
+}
+
 export async function POST(req: Request) {
   try {
     const { query } = await req.json();
@@ -13,16 +39,13 @@ export async function POST(req: Request) {
     const answer = await generateAnswer(query, docs);
 
     return Response.json({ answer });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Chat API Error:", error);
-    
-    const status = error.status || 500;
-    const message = error.error?.message || "An unexpected error occurred";
-    const code = error.code || "internal_error";
+    const { status, message, code } = getErrorResponse(error);
 
     return Response.json(
-      { error: message, code: code },
-      { status: status }
+      { error: message, code },
+      { status }
     );
   }
-}
+}

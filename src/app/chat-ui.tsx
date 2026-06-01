@@ -8,11 +8,37 @@ interface Message {
   content: string;
 }
 
+interface ApiError {
+  message: string;
+  code?: string;
+}
+
+function getErrorDetails(error: unknown): ApiError {
+  if (error instanceof Error) {
+    return { message: error.message };
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as Record<string, unknown>;
+
+    return {
+      message:
+        typeof maybeError.message === "string"
+          ? maybeError.message
+          : "An unexpected error occurred. Please try again.",
+      code: typeof maybeError.code === "string" ? maybeError.code : undefined,
+    };
+  }
+
+  return { message: "An unexpected error occurred. Please try again." };
+}
+
 export default function ChatUI() {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<{ message: string; code?: string } | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
+  const [lastQuery, setLastQuery] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,11 +49,14 @@ export default function ChatUI() {
 
   const handleAsk = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!query.trim() || isLoading) return;
+    const nextQuery = query.trim() || lastQuery;
 
-    const userMessage: Message = { role: "user", content: query };
+    if (!nextQuery || isLoading) return;
+
+    const userMessage: Message = { role: "user", content: nextQuery };
     setMessages((prev) => [...prev, userMessage]);
     setQuery("");
+    setLastQuery(nextQuery);
     setIsLoading(true);
     setError(null);
 
@@ -35,25 +64,27 @@ export default function ChatUI() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query: nextQuery }),
       });
 
-      const data = await res.json();
+      const data: { answer?: string; error?: string; code?: string } = await res.json();
 
       if (!res.ok) {
-        throw { 
-          message: data.error || "Failed to get response", 
-          code: data.code 
+        throw {
+          message: data.error || "Failed to get response",
+          code: data.code,
         };
       }
 
-      setMessages((prev) => [...prev, { role: "assistant", content: data.answer }]);
-    } catch (err: any) {
-      console.error("Chat Error:", err);
-      setError({
-        message: err.message || "An unexpected error occurred. Please try again.",
-        code: err.code
-      });
+      if (typeof data.answer !== "string") {
+        throw new Error("Response did not include an answer");
+      }
+
+      const answer = data.answer;
+      setMessages((prev) => [...prev, { role: "assistant", content: answer }]);
+    } catch (error: unknown) {
+      console.error("Chat Error:", error);
+      setError(getErrorDetails(error));
     } finally {
       setIsLoading(false);
     }
@@ -126,8 +157,8 @@ export default function ChatUI() {
             <div className="space-y-1">
               <h3 className="font-semibold text-red-500">Service Interruption</h3>
               <p className="text-sm text-red-400/80 max-w-xs">
-                {error.code === "insufficient_quota" 
-                  ? "OpenAI quota exceeded. Please check your billing or plan details."
+                {error.code === "insufficient_quota"
+                  ? "Gemini quota exceeded. Please check your billing or plan details."
                   : error.message}
               </p>
             </div>

@@ -3,7 +3,7 @@ import UploadUI from "./upload-ui";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#050505] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-black overflow-hidden flex flex-col md:flex-row">
+    <main className="min-h-screen bg-[#050505] from-zinc-900 via-zinc-950 to-black overflow-hidden flex flex-col md:flex-row">
       {/* Sidebar for Upload */}
       <aside className="w-full md:w-80 lg:w-96 p-4 md:p-6 border-b md:border-b-0 md:border-r border-white/5 flex flex-col gap-6">
         <div className="flex flex-col gap-1 px-2">

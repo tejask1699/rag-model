@@ -1,7 +1,11 @@
-const { Pool } = require('pg');
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { loadEnvConfig } = require("@next/env");
+const { Pool } = require("pg");
+
+loadEnvConfig(process.cwd());
 
 const pool = new Pool({
-  connectionString: "",
+  connectionString: process.env.DATABASE_URL ?? process.env.NEXT_PUBLIC_DATABASE_URL,
 });
 
 async function checkSchema() {

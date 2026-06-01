@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server';
 import { storeDocuments } from '@/lib/documents';
 import { extractTextFromFile } from '@/lib/parser';
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: string };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return "Failed to store documents";
+}
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -28,11 +43,10 @@ export async function POST(req: Request) {
       message: "Documents stored successfully",
       extractedLength: textToStore.length 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Ingestion error:", error);
     return NextResponse.json({ 
-      error: error.message || "Failed to store documents" 
+      error: getErrorMessage(error) 
     }, { status: 500 });
   }
 }
-
